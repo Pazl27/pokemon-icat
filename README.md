@@ -45,7 +45,18 @@ If you would like to contribute, an AUR package would be awesome!
 
 ### NixOS
 
-The current flake *does not work* yet, it is still WIP.
+To run the program with the help of nix run: 
+```nix
+nix run github:aflaag/pokemon-icat
+```
+
+You can itegrate `pokemon-icat` into your flake like so: 
+```nix 
+pokemon-icat = {
+    url = "github:Pazl27/pokemon-icat";
+    inputs.nixpkgs.follows = "nixpkgs";
+};
+```
 
 ## Usage
 
