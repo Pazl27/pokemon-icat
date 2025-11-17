@@ -108,12 +108,12 @@ Create a module (e.g., `pokemon.nix`):
             '';
       };
     }
-    ```
+```
 
 Then enable it:
 ```nix
 features.tools.pokemon.enable = true;
-    ```
+```
 
 ### Finding the correct hashes
 
