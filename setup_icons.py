@@ -17,6 +17,17 @@ from bin.converter import POKEMONS_METADATA
 # consts
 BATCH_SIZE = 50
 
+# Read sprites commit from environment variable, fallback to master
+SPRITES_COMMIT = os.environ.get("SPRITES_COMMIT", "master")
+
+# If using a specific commit, use git trees API, otherwise use master branch
+if SPRITES_COMMIT == "master":
+    TREE_ROOT_URL = "https://api.github.com/repos/PokeAPI/sprites/git/trees/6127a37944160e603c1a707ac0c5f8e367b4050a"
+    URL_POINT_BASE = "https://raw.githubusercontent.com/PokeAPI/sprites/master"
+else:
+    TREE_ROOT_URL = f"https://api.github.com/repos/PokeAPI/sprites/git/trees/{SPRITES_COMMIT}"
+    URL_POINT_BASE = f"https://raw.githubusercontent.com/PokeAPI/sprites/{SPRITES_COMMIT}"
+
 
 @dataclass
 class PokemonPath:
@@ -26,21 +37,13 @@ class PokemonPath:
 
 # urls
 HEADERS = {"Accept": "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28"}
-TREE_ROOT_URL = "https://api.github.com/repos/PokeAPI/sprites/git/trees/6127a37944160e603c1a707ac0c5f8e367b4050a"
 
 URL_TREE = "https://api.github.com/repos/PokeAPI/sprites/git/trees/c87f4ced89853ad94e3a474306c07d329a28d59c"
-URL_POINT_BASE = "https://raw.githubusercontent.com/PokeAPI/sprites/master"
 
 # dirs
-# CACHE_DIR = Path.home() / ".cache"
-# CACHE_DIR = Path("$POKEMON_ICAT_DATA")
-# POKEMON_ICAT_DIR = CACHE_DIR / "pokemon-icat"
-# POKEMON_ICAT_DIR = Path("$POKEMON_ICAT_DATA")
 POKEMON_ICAT_DIR = Path(os.environ["POKEMON_ICAT_DATA"])
-# POKEMON_ICAT_DIR.mkdir(exist_ok=True, parents=True)
 
 POKEMON_ICONS_DIR = POKEMON_ICAT_DIR / "pokemon-icons"
-# POKEMON_ICONS_DIR.mkdir(exist_ok=True, parents=True)
 
 
 POKEMON_PATHS = [
@@ -287,7 +290,7 @@ async def download_single_pokemon(
 
     # save the processed RGBA image
     img.save(destination)
-    
+
     # os.utime(destination, (0, 0))
     #
     # subprocess.run(["optipng", "-strip", "all", "-quiet", "-o7", str(destination)], check=True)
@@ -458,7 +461,7 @@ async def main() -> None:
     await gather_pokemons(tree)
 
     if len(ignored) != 0:
-        print("These images were ignored due tue errors: " + ", ".join(repr(p.path.name) for p in ignored))
+        print("These images were ignored due to errors: " + ", ".join(repr(p.path.name) for p in ignored))
 
 
 if __name__ == "__main__":

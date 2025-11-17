@@ -44,19 +44,90 @@ sh install.sh -u 15
 If you would like to contribute, an AUR package would be awesome!
 
 ### NixOS
+This project includes a Home Manager module for easy integration into NixOS and standalone Home Manager setups.
 
-To run the program with the help of nix run: 
+#### 1. Add to your flake inputs
+
+Add pokemon-icat as an input to your `flake.nix`:
 ```nix
-nix run github:aflaag/pokemon-icat
+{
+      inputs = {
+        pokemon-icat = {
+          url = "github:aflaag/pokemon-icat"; 
+          inputs.nixpkgs.follows = "nixpkgs";
+        };
+      };
+}
 ```
 
-You can itegrate `pokemon-icat` into your flake like so: 
-```nix 
-pokemon-icat = {
-    url = "github:Pazl27/pokemon-icat";
-    inputs.nixpkgs.follows = "nixpkgs";
+#### 2. Import the Home Manager module
+
+For **NixOS with Home Manager**:
+```nix
+outputs = { nixpkgs, home-manager, pokemon-icat, ... }: {
+      nixosConfigurations.yourHost = nixpkgs.lib.nixosSystem {
+        modules = [
+          home-manager.nixosModules.home-manager
+          {
+            home-manager.users.yourUser = {
+              imports = [
+                pokemon-icat.homeManagerModules.default
+              ];
+            };
+          }
+        ];
+      };
 };
 ```
+
+
+#### 3. Configure in your Home Manager config
+
+Create a module (e.g., `pokemon.nix`):
+```nix
+{ config, lib, pkgs, ... }:
+    with lib;
+    {
+      options.features.tools.pokemon = {
+        enable = mkEnableOption "pokemon-icat";
+      };
+      
+      config = mkIf config.features.tools.pokemon.enable {
+        programs.pokemon-icat = {
+          enable = true;
+          
+          # Pin sprites to a specific commit for reproducibility
+          spritesCommit = "e1d237e02b8c0b385c644f184f26720909a82132";
+          spritesHash = "sha256-3uD98h6VYepyOeIPaCdcTMFMVuwH8UvLl6scC8HMxu0=";
+          upscaleFactor = 3.0;
+        };
+        
+        # Optional: Show random Pokemon on shell start
+        programs.zsh.initExtra = ''
+              pokemon-icat
+            '';
+      };
+    }
+    ```
+
+Then enable it:
+```nix
+features.tools.pokemon.enable = true;
+    ```
+
+### Finding the correct hashes
+
+When using a different `spritesCommit`:
+
+1. Browse commits at https://github.com/PokeAPI/sprites/commits/master
+2. Copy the commit hash (40 characters)
+3. Set `spritesCommit` to your chosen hash
+4. Set `spritesHash` to a dummy value: `"sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="`
+5. Run `nixos-rebuild switch` or `home-manager switch`
+6. Nix will fail and show the expected hash in the error message
+7. Copy the hash from `got: sha256-...` and update `spritesHash`
+8. Rebuild - it should now succeed
+
 
 ## Usage
 
